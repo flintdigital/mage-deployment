@@ -212,9 +212,16 @@ if(is_array($_POST) && !empty($_POST)){
             <?php endforeach ?>
             <?php endif ?>
             
-            <h3>Instructions</h3>
+            <h3>Description</h3>
             <p>Deploy an initial Magento Installation with this simple form. </p>
-            <p>Once you submit the form, it will download a shell script that you should run in your local environment, right were you want the code to be in.</p>
+            
+            <h3>Instructions</h3>
+            <ul>
+                <li>Fill the data requested</li>
+                <li>Submit the form to download the script</li>
+                <li>Move the script from your downloads folder into the folder you'll want the code to be in</li>
+                <li>Run the script as root: sudo sh abcd_init.sh</li>
+            </ul>
             
             <h3>Requirements</h3>
             <ul>
