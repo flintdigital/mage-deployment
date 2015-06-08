@@ -291,7 +291,7 @@ if(is_array($_POST) && !empty($_POST)){
                     
                     <div class="col-md-6">
                         <label for="db_pass">DB Password</label>
-                        <input required type="password" class="form-control" id="db_password" name="args[db_pass]" value="<?php echo empty($_POST['args[db_pass]']) ? '' : $_POST['args[db_pass]']?>" />
+                        <input required type="text" class="form-control" id="db_password" name="args[db_pass]" value="<?php echo empty($_POST['args[db_pass]']) ? '' : $_POST['args[db_pass]']?>" />
                     </div>
                 </div>
                 
