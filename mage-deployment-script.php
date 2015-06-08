@@ -31,8 +31,11 @@ If on linux, make sure you have default.local vhost at /var/www
  * 
  *  */
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(E_ALL);ini_set('display_errors', 1);
+
+define("DEFAULT_APACHEDIR_MAC", '/Users/flintdigital/Sites/');
+define("DEFAULT_APACHEDIR_LINUX", '/var/www/');
+define("HTTPD_CONF_FILE_MAC", "/Volumes/Macintosh HD/Applications/MAMP/conf/apache/httpd.conf");
 
 $config = file_get_contents(dirname(__FILE__).'/config.json');
 $config = json_decode($config, true);
@@ -136,16 +139,26 @@ if(is_array($_POST) && !empty($_POST)){
     
     //Let's create the vhost now
     if($_POST['environment'] == 'mac') {
+        $httpdConfFile = trim(HTTPD_CONF_FILE_MAC);
+        $httpdConfFile = str_replace(' ', '\ ', $httpdConfFile);
+        //$vhostString = "\n\n#vhost configuration for $domain\n<VirtualHost *>\nDocumentRoot ".'$PROJECT_DIR'."\nServerName {$_POST['args']['url']}\n</VirtualHost>";
+        addCmdToScript("echo \"#vhost configuration for {$_POST['args']['url']}\" >> $httpdConfFile", "Add the vhost configuration");
+        addCmdToScript("echo \"<VirtualHost *>\" >> $httpdConfFile");
+        addCmdToScript("echo \"DocumentRoot ".'$PROJECT_DIR'."\" >> $httpdConfFile");
+        addCmdToScript("echo \"ServerName {$_POST['args']['url']}\" >> $httpdConfFile");
+        addCmdToScript("echo \"</VirtualHost>\" >> $httpdConfFile");
         
+        //Add host to /etc/hosts
+        addCmdToScript("echo \"127.0.0.1         local.$domain\" | tee -a /etc/hosts", 'Add host to /etc/hosts');
     }
     
     else if($_POST['environment'] == 'linux') {
         //Check to see if Link exists, Delete if it does.
-        addCmdToScript("if [ -d \"/var/www/$client\" ]; then\n\trm /var/www/$client\nfi\n", 'Check to see if Link exists, Delete if it does');
+        addCmdToScript("if [ -d \"".DEFAULT_APACHEDIR_LINUX."$client\" ]; then\n\trm ".DEFAULT_APACHEDIR_LINUX."$client\nfi\n", 'Check to see if Link exists, Delete if it does');
         
         //Create Link to Magento's Root in /var/www
-        addCmdToScript('ln -s $PROJECT_DIR/ "/var/www/'.$client.'"', "Create Link to Magento's Root in /var/www");
-        addCmdToScript("chown -h {$_POST['environment_user']}:{$_POST['environment_user']} \"/var/www/$client\"");
+        addCmdToScript('ln -s $PROJECT_DIR/ "'.DEFAULT_APACHEDIR_LINUX.'/var/www/'.$client.'"', "Create Link to Magento's Root in /var/www");
+        addCmdToScript("chown -h {$_POST['environment_user']}:{$_POST['environment_user']} \"".DEFAULT_APACHEDIR_LINUX."$client\"");
         
         //Copy paste the vhost template file
         addCmdToScript("cp /etc/apache2/sites-available/default.local /etc/apache2/sites-available/$domain.conf", 'Copy paste the vhost template file');
