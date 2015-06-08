@@ -1,0 +1,39 @@
+{
+    "platform": {
+        "slug": "mage-latest",
+        "repo_url": "git@github.com:flintdigital/mage-latest.git"
+    },
+    
+    "plugins": {
+        "magento-require-login": {
+            "name": "Require Login",
+            "repo_url": "git@github.com:jreinke/magento-require-login.git",
+            "privacy": "public"
+        }
+     },
+
+     "themes": {
+         
+    },
+    
+    "timezones": [
+        {"value":"America/Denver","name":"Denver (Mountain)"},
+        {"value":"America/Phoenix","name":"Phoenix (MST)"},
+        {"value":"America/New_York","name":"New York (Eastern)"},
+        {"value":"America/Chicago","name":"Chicago (Central)"},
+        {"value":"America/Los_Angeles","name":"Los Angeles (Pacific)"}
+    ],
+    
+    "mage_config_defaults": {
+        "license_agreement_accepted": "yes",
+        "locale": "en_US",
+        "default_currency": "USD",
+        "db_host": "127.0.0.1",
+        "use_rewrites": "yes", 
+        "skip_url_validation":"",
+        "use_secure": "no",
+        "secure_base_url": " ",
+        "use_secure_admin": "no"
+    }
+    
+}
