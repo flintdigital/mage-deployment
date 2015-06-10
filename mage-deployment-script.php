@@ -5,23 +5,19 @@
  * 
 TO DO
  * mac debug
- * create database
  * private repos *
  * git push
  * local.xml ? 
  * include utils in config
 
-
- * To make this script more robust, we should include these validations
- * 
- * DB Creds
- * modgit installed or not
- * 
-
 Script currnetly does this:
  * Displays a web form to input the necessary data
  * On Submit, it creates a shell script and sends it to download
  * The shell script does this:
+    * Check that modgit is installed  
+    * Check mysql command exists (MAMP users mostly)
+    * Check DB Creds
+    * Check DB exists, create DB if it doesn't
     * Clones the empty customer repository
     * Initializes modgit
     * Gets Magento Latest
@@ -67,6 +63,50 @@ if(is_array($_POST) && !empty($_POST)){
     $client = $client[0];
     $user = $_POST['environment_user'];
     
+    
+    ////////////////////////////////////////////////////////////
+    //Begin Validations
+    ////////////////////////////////////////////////////////////
+    
+    //Check that modgit is installed
+    addCmdToScript('if ! type "modgit" > /dev/null; then'
+            ."\n".'echo "--------------------------------------------------------------------"'
+            ."\n".'echo "It seems like you don\'t have modgit installed.'."\n".'Chill though, just run the following commands to install it and then run this script again."'
+            ."\n".'echo "********************************************************************"'
+            ."\n".'echo "wget -O modgit https://raw.github.com/jreinke/modgit/master/modgit"'
+            ."\n".'echo "chmod +x modgit"'
+            ."\n".'echo "sudo mv modgit /usr/local/bin"'
+            ."\n".'echo "********************************************************************"'
+            ."\nexit\nfi");
+    
+    //Check that mysql is installed and accessible (mac sometimes needs to export the command to the Env Path
+    addCmdToScript('if ! type "mysql" > /dev/null; then'
+            ."\n".'echo "--------------------------------------------------------------------"'
+            ."\n".'echo "It seems like you don\'t have mysql installed or it isn\'t installed properly for this script to work.'."\n".'Chill though, just try the following instructions and then run this script again."'
+            ."\n".'echo "********************************************************************"'
+            ."\n".'echo "If you are running Linux your mysql is not installed."'
+            ."\n".'echo "If you are running MAC try this:"'
+            ."\n".'echo "        cd && vi .bash_profile"'
+            ."\n".'echo "        Copy paste this into that file: export PATH=\$PATH:/Applications/MAMP/Library/bin/:\$PATH"'
+            ."\n".'echo "        You may need to restart terminal window."'
+            ."\n".'echo "********************************************************************"'
+            ."\nexit\nfi");
+    
+    //Check that DB Creds are correct
+    addCmdToScript('if ! mysql -u'.$_POST['args']['db_user'].' -p'.$_POST['args']['db_pass'].' -e ""; then'
+            ."\n".'echo "The DB Credentials supplied are incorrect. '."\n".'Please correct them in the deployment panel, and download the script again. '."\n".'This script file can be deleted."'
+            ."\nexit\nfi");
+    
+    //Check that DB Exists, create it if not (DB User must have create rights)
+    addCmdToScript('if ! mysql -u'.$_POST['args']['db_user'].' -p'.$_POST['args']['db_pass'].' -e "use '.$_POST['args']['db_name'].'"; then'
+            ."\n".'echo "The DB does not exist. '."\n".'I\'ll create it for you."');
+    addCmdToScript('echo "create database '.$_POST['args']['db_name'].'" | mysql -u'.$_POST['args']['db_user'].' -p'.$_POST['args']['db_pass']);
+    addCmdToScript("\nfi");
+    ////////////////////////////////////////////////////////////
+    //End Validations
+    ////////////////////////////////////////////////////////////
+    
+    
     //Get Base Dir, create code/ folder
     addCmdToScript('DIR=$(unset CDPATH && cd "$(dirname "$0")" && echo $PWD/)');
     addCmdToScript('cd $DIR');
@@ -91,9 +131,6 @@ if(is_array($_POST) && !empty($_POST)){
     
     //Commit the files to git repo if it is set
     addCmdToScript("git commit -a -m 'Deployment Script: Adding Magento base installation'", "Commit the files added", '', true, $user);
-    
-    
-//    addCmdToScript('exit');
     
     
     //Create Magento Installer command
@@ -167,7 +204,7 @@ if(is_array($_POST) && !empty($_POST)){
         addCmdToScript("if [ -d \"".DEFAULT_APACHEDIR_LINUX."$client\" ]; then\n\trm ".DEFAULT_APACHEDIR_LINUX."$client\nfi\n", 'Check to see if Link exists, Delete if it does');
         
         //Create Link to Magento's Root in /var/www
-        addCmdToScript('ln -s $PROJECT_DIR/ "'.DEFAULT_APACHEDIR_LINUX.'/var/www/'.$client.'"', "Create Link to Magento's Root in /var/www");
+        addCmdToScript('ln -s $PROJECT_DIR/ "'.DEFAULT_APACHEDIR_LINUX.$client.'"', "Create Link to Magento's Root in ".DEFAULT_APACHEDIR_LINUX);
         addCmdToScript("chown -h {$_POST['environment_user']}:{$_POST['environment_user']} \"".DEFAULT_APACHEDIR_LINUX."$client\"");
         
         //Copy paste the vhost template file
