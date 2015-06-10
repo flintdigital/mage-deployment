@@ -70,15 +70,15 @@ if(is_array($_POST) && !empty($_POST)){
     //Get Base Dir, create code/ folder
     addCmdToScript('DIR=$(unset CDPATH && cd "$(dirname "$0")" && echo $PWD/)');
     addCmdToScript('cd $DIR');
-    addCmdToScript('mkdir code', 'Add code/ folder to current directory');
     
-    //Clone the Customer empty Repository if git repo is set: we use su - USER because this script should be run as root (using sudo)
-    addCmdToScript('git clone '.$customerGitRepo.' $DIR/code', "Clone the customer git repository", '', true, $user);
+    addCmdToScript('su - '.$user.' -c "cd $DIR && mkdir code"', 'Add code/ folder to current directory');
     
     addCmdToScript('PROJECT_DIR=$(find $DIR -mindepth 1 -maxdepth 1 -type d)', 'Get Project main directory');
     addCmdToScript('echo "Project base directory $PROJECT_DIR"');
     
-    
+    //Clone the Customer empty Repository if git repo is set: we use su - USER because this script should be run as root (using sudo)
+    addCmdToScript('git clone '.$customerGitRepo.' $DIR/code', "Clone the customer git repository", '', true, $user);
+
     //Initialize modgit
     addCmdToScript('modgit init', "Initialize modgit", '' , false , $user);
     
