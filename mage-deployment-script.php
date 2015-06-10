@@ -46,8 +46,6 @@ $config = json_decode($config, true);
 $errors = [];
     
 if(is_array($_POST) && !empty($_POST)){
-    //TODO: Check required fields: mainly looking for a theme. Is it required?
-    
     //This var will have all the script contents, in the end this will be added to a mage-deployment.sh file
     $script = "";
     
@@ -67,6 +65,17 @@ if(is_array($_POST) && !empty($_POST)){
     ////////////////////////////////////////////////////////////
     //Begin Validations
     ////////////////////////////////////////////////////////////
+    
+    //Check that git is installed (sometimes git is installed but not as cli in MAC)
+    addCmdToScript('if ! type "git" > /dev/null; then'
+            ."\n".'echo "--------------------------------------------------------------------"'
+            ."\n".'echo "It seems like you don\'t have git CLI installed.'."\n".'Chill though, just follow this instructions to install it and then run this script again."'
+            ."\n".'echo "********************************************************************"'
+            ."\n".'echo "If you are running linux install it like this: sudo apt-get install git"'
+            ."\n".'echo "If you are on Mac do the following:'
+            ."\n".'TODO: This should be a list of instructions to install git CLI in MAC"'
+            ."\n".'echo "********************************************************************"'
+            ."\nexit\nfi");
     
     //Check that modgit is installed
     addCmdToScript('if ! type "modgit" > /dev/null; then'
@@ -184,46 +193,50 @@ if(is_array($_POST) && !empty($_POST)){
     }
     
     //Let's create the vhost now
-    if($_POST['environment'] == 'mac') {
-        //Add trailing slash to spaces in httpd.conf file
-        $httpdConfFile = trim(HTTPD_CONF_FILE_MAC);
-        $httpdConfFile = str_replace(' ', '\ ', $httpdConfFile);
-        
-        addCmdToScript("echo \"#vhost configuration for {$_POST['args']['url']}\" >> $httpdConfFile", "Add the vhost configuration");
-        addCmdToScript("echo \"<VirtualHost *>\" >> $httpdConfFile");
-        addCmdToScript("echo \"DocumentRoot ".'$PROJECT_DIR'."\" >> $httpdConfFile");
-        addCmdToScript("echo \"ServerName {$_POST['args']['url']}\" >> $httpdConfFile");
-        addCmdToScript("echo \"</VirtualHost>\" >> $httpdConfFile");
-        
-        //Add host to /etc/hosts
-        addCmdToScript("echo \"127.0.0.1         local.$domain\" | tee -a /etc/hosts", 'Add host to /etc/hosts');
+    if(array_key_exists('configure_vhost', $_POST) && $_POST['configure_vhost'] == 'yes') {
+        if($_POST['environment'] == 'mac') {
+            //Add trailing slash to spaces in httpd.conf file
+            $httpdConfFile = trim(HTTPD_CONF_FILE_MAC);
+            $httpdConfFile = str_replace(' ', '\ ', $httpdConfFile);
+
+            addCmdToScript("echo \"#vhost configuration for {$_POST['args']['url']}\" >> $httpdConfFile", "Add the vhost configuration");
+            addCmdToScript("echo \"<VirtualHost *>\" >> $httpdConfFile");
+            addCmdToScript("echo \"DocumentRoot ".'$PROJECT_DIR'."\" >> $httpdConfFile");
+            addCmdToScript("echo \"ServerName {$_POST['args']['url']}\" >> $httpdConfFile");
+            addCmdToScript("echo \"</VirtualHost>\" >> $httpdConfFile");
+
+            //Add host to /etc/hosts
+            addCmdToScript("echo \"127.0.0.1         local.$domain\" | tee -a /etc/hosts", 'Add host to /etc/hosts');
+        }
+
+        else if($_POST['environment'] == 'linux') {
+            //Check to see if Link exists, Delete if it does.
+            addCmdToScript("if [ -d \"".DEFAULT_APACHEDIR_LINUX."$client\" ]; then\n\trm ".DEFAULT_APACHEDIR_LINUX."$client\nfi\n", 'Check to see if Link exists, Delete if it does');
+
+            //Create Link to Magento's Root in /var/www
+            addCmdToScript('ln -s $PROJECT_DIR/ "'.DEFAULT_APACHEDIR_LINUX.$client.'"', "Create Link to Magento's Root in ".DEFAULT_APACHEDIR_LINUX);
+            addCmdToScript("chown -h {$_POST['environment_user']}:{$_POST['environment_user']} \"".DEFAULT_APACHEDIR_LINUX."$client\"");
+
+            //Copy paste the vhost template file
+            addCmdToScript("cp /etc/apache2/sites-available/default.local /etc/apache2/sites-available/$domain.conf", 'Copy paste the vhost template file');
+
+            //Configure vhost config file to use the project name
+            addCmdToScript("sed -i \"s/template/$client/g\" /etc/apache2/sites-available/$domain.conf", 'Configure vhost config file to use the project name');
+
+            //Enable the site in apache
+            addCmdToScript("a2ensite $domain.conf", 'Enable the site in apache');
+
+            //Reload Apache Config
+            addCmdToScript("/etc/init.d/apache2 reload", 'Reload Apache Config');
+
+            //Add host to /etc/hosts
+            addCmdToScript("echo \"127.0.0.1         local.$domain\" | tee -a /etc/hosts", 'Add host to /etc/hosts');
+
+            addCmdToScript("chown -hR {$_POST['environment_user']}:{$_POST['environment_user']}".' $PROJECT_DIR');
+        }
     }
     
-    else if($_POST['environment'] == 'linux') {
-        //Check to see if Link exists, Delete if it does.
-        addCmdToScript("if [ -d \"".DEFAULT_APACHEDIR_LINUX."$client\" ]; then\n\trm ".DEFAULT_APACHEDIR_LINUX."$client\nfi\n", 'Check to see if Link exists, Delete if it does');
-        
-        //Create Link to Magento's Root in /var/www
-        addCmdToScript('ln -s $PROJECT_DIR/ "'.DEFAULT_APACHEDIR_LINUX.$client.'"', "Create Link to Magento's Root in ".DEFAULT_APACHEDIR_LINUX);
-        addCmdToScript("chown -h {$_POST['environment_user']}:{$_POST['environment_user']} \"".DEFAULT_APACHEDIR_LINUX."$client\"");
-        
-        //Copy paste the vhost template file
-        addCmdToScript("cp /etc/apache2/sites-available/default.local /etc/apache2/sites-available/$domain.conf", 'Copy paste the vhost template file');
-        
-        //Configure vhost config file to use the project name
-        addCmdToScript("sed -i \"s/template/$client/g\" /etc/apache2/sites-available/$domain.conf", 'Configure vhost config file to use the project name');
-
-        //Enable the site in apache
-        addCmdToScript("a2ensite $domain.conf", 'Enable the site in apache');
-        
-        //Reload Apache Config
-        addCmdToScript("/etc/init.d/apache2 reload", 'Reload Apache Config');
-        
-        //Add host to /etc/hosts
-        addCmdToScript("echo \"127.0.0.1         local.$domain\" | tee -a /etc/hosts", 'Add host to /etc/hosts');
-        
-        addCmdToScript("chown -hR {$_POST['environment_user']}:{$_POST['environment_user']}".' $PROJECT_DIR');
-    }
+    
     
     //TODO Git Push
     
@@ -275,7 +288,7 @@ if(is_array($_POST) && !empty($_POST)){
                 <li>Client empty Repository must already be created (usually in Assembla)</li>
                 <li>If you don't set a Repository, the code won't be tracked with git. Use this for TESTING PURPOSES ONLY.</li>
                 <li>Git must be installed on your local environment</li>
-                <li>DB MUST exist</li>
+                <li>DB MUST exist, or DB User provided must have DB Create permissions</li>
             </ul>
             
             <br /><br /><hr /><br />
@@ -297,6 +310,15 @@ if(is_array($_POST) && !empty($_POST)){
                     <div class="col-md-6">
                         <label for="environment_user">OS username</label>
                         <input required type="text" class="form-control" id="environment_user" name="environment_user" value="<?php echo empty($_POST['environment_user']) ? '' : $_POST['environment_user']?>" />
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-6">
+                        <label>Do you want the script to configure the vhost for you?</label>
+                        <br />
+                        <input type="checkbox" id="configure_vhost" name="configure_vhost" value="yes" checked="checked"/>
+                        <label for="configure_vhost">Yes</label>
                     </div>
                 </div>
                 
