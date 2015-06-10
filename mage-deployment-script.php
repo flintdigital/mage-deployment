@@ -60,16 +60,18 @@ if(is_array($_POST) && !empty($_POST)){
     $client = $client[0];
     $user = $_POST['environment_user'];
     
-    //Get Base Dir
+    //Get Base Dir, create code/ folder
     addCmdToScript('FILE=$(readlink -f $0) && DIR=$(dirname $FILE)', 'Get initial directory');
     addCmdToScript('cd $DIR');
+    addCmdToScript('mkdir code', 'Add code/ folder to current directory');
     
     //Clone the Customer empty Repository if git repo is set: we use su - USER because this script should be run as root (using sudo)
     addCmdToScript('git clone '.$customerGitRepo.' $DIR/code', "Clone the customer git repository", '', true, $user);
     
     addCmdToScript('PROJECT_DIR=$(find $DIR -mindepth 1 -maxdepth 1 -type d)', 'Get Project main directory');
     addCmdToScript('echo "Project base directory $PROJECT_DIR"');
-
+    
+    
     //Initialize modgit
     addCmdToScript('modgit init', "Initialize modgit", '' , false , $user);
     
