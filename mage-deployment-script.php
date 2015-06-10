@@ -4,7 +4,7 @@
  * Mage Deployment Script
  * 
 TO DO
- * mac vhost
+ * mac debug
  * create database
  * private repos *
  * git push
@@ -61,7 +61,7 @@ if(is_array($_POST) && !empty($_POST)){
     $user = $_POST['environment_user'];
     
     //Get Base Dir, create code/ folder
-    addCmdToScript('FILE=$(readlink -f $0) && DIR=$(dirname $FILE)', 'Get initial directory');
+    addCmdToScript('DIR=$(unset CDPATH && cd "$(dirname "$0")" && echo $PWD/)');
     addCmdToScript('cd $DIR');
     addCmdToScript('mkdir code', 'Add code/ folder to current directory');
     
