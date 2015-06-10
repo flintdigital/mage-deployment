@@ -11,6 +11,13 @@ TO DO
  * local.xml ? 
  * include utils in config
 
+
+ * To make this script more robust, we should include these validations
+ * 
+ * DB Creds
+ * modgit installed or not
+ * 
+
 Script currnetly does this:
  * Displays a web form to input the necessary data
  * On Submit, it creates a shell script and sends it to download
@@ -141,9 +148,10 @@ if(is_array($_POST) && !empty($_POST)){
     
     //Let's create the vhost now
     if($_POST['environment'] == 'mac') {
+        //Add trailing slash to spaces in httpd.conf file
         $httpdConfFile = trim(HTTPD_CONF_FILE_MAC);
         $httpdConfFile = str_replace(' ', '\ ', $httpdConfFile);
-        //$vhostString = "\n\n#vhost configuration for $domain\n<VirtualHost *>\nDocumentRoot ".'$PROJECT_DIR'."\nServerName {$_POST['args']['url']}\n</VirtualHost>";
+        
         addCmdToScript("echo \"#vhost configuration for {$_POST['args']['url']}\" >> $httpdConfFile", "Add the vhost configuration");
         addCmdToScript("echo \"<VirtualHost *>\" >> $httpdConfFile");
         addCmdToScript("echo \"DocumentRoot ".'$PROJECT_DIR'."\" >> $httpdConfFile");
