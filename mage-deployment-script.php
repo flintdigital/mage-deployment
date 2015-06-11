@@ -289,6 +289,8 @@ if(is_array($_POST) && !empty($_POST)){
                 <li>If you don't set a Repository, the code won't be tracked with git. Use this for TESTING PURPOSES ONLY.</li>
                 <li>Git must be installed on your local environment</li>
                 <li>DB MUST exist, or DB User provided must have DB Create permissions</li>
+                <li>If you are using MAMP, make sure it is initialized</li>
+                <li>Magento admin password MUST be at least 7 chars long and it MUST have at least one number and one letter</li>
             </ul>
             
             <br /><br /><hr /><br />
