@@ -5,10 +5,6 @@
  * 
 TO DO
  * mac debug
- * private repos *
- * git push
- * local.xml ? 
- * include utils in config
 
 Script currnetly does this:
  * Displays a web form to input the necessary data
@@ -149,8 +145,8 @@ if(is_array($_POST) && !empty($_POST)){
     addCmdToScript($magentoInstallerCmd, "Run Magento Installer CLI", 'Running Magento Installer', false, $user);
     
     //TODO: Add local.xml to git, ?? run --assume-unchanged on it??
-    
-    
+    addCmdToScript("git add app/etc/local.xml", "Add the local.xml file to the repo", '', true);
+    addCmdToScript("git commit app/etc/local.xml -m 'Adding local.xml file to the repo'", '', '', true);
     
     //Go through each module selected, modgit add, git add, git commit, git push
     $requestedPlugins = array_key_exists('plugins', $_POST) ? $_POST['plugins'] : [];
@@ -235,10 +231,9 @@ if(is_array($_POST) && !empty($_POST)){
             addCmdToScript("chown -hR {$_POST['environment_user']}:{$_POST['environment_user']}".' $PROJECT_DIR');
         }
     }
-    
-    
-    
-    //TODO Git Push
+
+    //Add git push to the script
+    addCmdToScript("git push origin master", "Push all the code to the git repo", "", true);
     
     
     
@@ -285,6 +280,7 @@ if(is_array($_POST) && !empty($_POST)){
             
             <h3>Requirements</h3>
             <ul>
+                <li>You need a personal Github account, you also need to set your computer's ssh key in github</li>
                 <li>Client empty Repository must already be created (usually in Assembla)</li>
                 <li>If you don't set a Repository, the code won't be tracked with git. Use this for TESTING PURPOSES ONLY.</li>
                 <li>Git must be installed on your local environment</li>
@@ -329,7 +325,7 @@ if(is_array($_POST) && !empty($_POST)){
                 <h3>2) Fill the following data</h3>
                 <br />
                 
-                <h4>2.1) Git / Github Data</h4>
+                <h4>2.1) Git</h4>
                 <br />
                 
                 <div class="row">
@@ -339,17 +335,6 @@ if(is_array($_POST) && !empty($_POST)){
                     </div>
                 </div>
                 
-                <div class="row">
-                    <div class="col-md-6">
-                        <label for="github_user">Github User (only needed if private plugins are selected)</label>
-                        <input type="text" class="form-control" id="github_user" name="github_user" value="<?php echo empty($_POST['github_user']) ? '' : $_POST['github_user']?>" />
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <label for="github_password">Github Password (only needed if private plugins are selected)</label>
-                        <input type="password" class="form-control" id="github_password" name="github_password" value="<?php echo empty($_POST['github_password']) ? '' : $_POST['github_password']?>" />
-                    </div>
-                </div>
                 <br />
                 <h4>2.2) Database Credentials</h4>
                 <br />
@@ -458,29 +443,8 @@ if(is_array($_POST) && !empty($_POST)){
                 <h3>5) All Set? Download the script then! </h3>
                 <input type="submit" value="Download Script" class="btn btn-primary"/>
             </form>
-        
-        
-        
-        
-        <p>This script will:</p>
-        <ul>
-            <li>Select Platform</li>
-            <li>Clone empty repo</li>
-            <li>Init modgit</li>
-            <li>Add Mage latest</li>
-            <li>Commit and push</li>
-            <li>Run mage Install</li>
-            <li>Commit and push</li>
-            <li>Select plugins/theme/utils</li>
-            <li>Modgit add each selected. Commit and push each selected</li>
-        </ul>
-        
-        
-        
         </div>
         
-        
-        <!--<pre><?php var_dump($config)?></pre>-->
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     </body>
 </html>
