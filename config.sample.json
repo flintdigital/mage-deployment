@@ -9,7 +9,7 @@
             "name": "Require Login",
             "repo_url": "git@github.com:jreinke/magento-require-login.git",
             "privacy": "public"
-        }
+        },
      },
 
      "themes": {
