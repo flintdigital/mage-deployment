@@ -20,6 +20,7 @@ You will likely want to add modules (and themes) in the initial build process. T
 
 ##### To add a Module or Theme
 To add a Module add something like this inside the plugin object.
+
 `
  "mage-onestep-checkout-iwd": {
             "name": "Magento One Step Checkout - IWD",
@@ -27,6 +28,7 @@ To add a Module add something like this inside the plugin object.
             "privacy": "public"
         },
 `
+
 1. The key (mage-onestep-checkout-iwd) should match the repo slug. 
 2. name is used by the form generation script
 3. repo_url is Repo URL of the repo you are checking the code out of. 
